@@ -10,6 +10,7 @@ export const initMap = (google, element, config) => {
 	const map = new window.google.maps.Map(
 		document.getElementById(element), config
 	);
+  return map;
 }
 
 //Adiciona um marker pro mapa, dado um mapa, posição e conteúdo
@@ -18,9 +19,20 @@ export const addMarker = (content, position, map) =>{
 	const marker = new window.google.maps.Marker({
     	position: position,
     	map: map
-    });
-    var infoWindow = new window.google.maps.InfoWindow({content: content})
-    marker.addEventListener('click',infoWindow.open(map, marker));
+  });
+  return marker;
+}
+
+
+export const addInfoWindowListener = (content, map, marker) =>{
+  var infoWindow = new window.google.maps.InfoWindow({content: content})
+  marker.addEventListener('click',infoWindow.open(map, marker));
+}
+
+export const addInfoWindowListenerAndOpen = (content, map, marker) =>{
+  var infoWindow = new window.google.maps.InfoWindow({content: content})
+  marker.addEventListener('click',infoWindow.open(map, marker));
+  infoWindow.open(map, marker);
 }
 
 export const getGoogleMaps = () => {
@@ -32,7 +44,8 @@ export const getGoogleMaps = () => {
           delete window.resolveGoogleMapsPromise;
         };
         //Cria o script no DOM pra carregar o Maps Api
-        const key = 'AIzaSyAph94kHgFlxXgTW_62vr2XVc9j5rXUnL0';
+        // const key = 'AIzaSyAph94kHgFlxXgTW_62vr2XVc9j5rXUnL0'; => chave antiga, do projeto do curso de apis
+        const key = 'AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik';
         const script = document.createElement("script");
         script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&v=3&callback=resolveGoogleMapsPromise`
         script.async = true;

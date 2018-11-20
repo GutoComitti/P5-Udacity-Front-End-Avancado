@@ -2,13 +2,6 @@
   text-align: center;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
-}
-
-body, html{ height: 100%; margin: 0; padding: 0; }
-
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -20,13 +13,76 @@ body, html{ height: 100%; margin: 0; padding: 0; }
   color: white;
 }
 
-#map{
-  height: 100%;
-  position: static;
-}
-
 .App-link {
   color: #61dafb;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+}
+
+.container{
+  height: 100%;
+}
+
+body, html{ height: 100%; margin: 0; padding: 0; }
+
+nav{
+  height: 10%;
+  background-color: #222;
+}
+
+#filter-input{
+  width: 100%;
+  height: 10%;
+  font-size: 26px;
+  border: 0;
+  padding: 0;
+  text-align: center;
+}
+
+#filter-container h1{
+  text-align: center;
+  vertical-align: top;
+  margin: 0;
+  color: #777;
+  height: 10%;
+}
+
+#filter-container{
+  width: 20%;
+  height: 100%;
+  margin: 0;
+  float: left;
+  background-color: black;
+}
+
+#map{
+  height: 90%;
+}
+
+#results-list{
+  list-style-type: none;
+  margin-top: 0;
+  padding: 0;
+}
+
+#results-list li p:hover{
+  background-color: #666;
+  color: white;
+}
+
+#results-list li p{
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 15px 0 15px 20px;
+  color: #777;
+}
+
+#root{
+  height: 100%;
 }
 
 @keyframes App-logo-spin {
