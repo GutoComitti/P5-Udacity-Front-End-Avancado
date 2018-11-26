@@ -6,7 +6,7 @@
 // console.log(`google é ${google}`);
 // console.log(`window.google é ${window.google}`);
 
-export const initMap = (google, element, config) => {
+export const initMap = (element, config) => {
 	const map = new window.google.maps.Map(
 		document.getElementById(element), config
 	);
@@ -15,7 +15,7 @@ export const initMap = (google, element, config) => {
 
 //Adiciona um marker pro mapa, dado um mapa, posição e conteúdo
 //position é um objeto com key value pairs, no formato {lat: 40.74135, lng: -73.99802}
-export const addMarker = (content, position, map) =>{
+export const addMarker = (position, map) =>{
 	const marker = new window.google.maps.Marker({
     	position: position,
     	map: map
@@ -24,16 +24,19 @@ export const addMarker = (content, position, map) =>{
 }
 
 
-export const addInfoWindowListener = (content, map, marker) =>{
+export const addInfoWindowListener = (content, marker) =>{
   var infoWindow = new window.google.maps.InfoWindow({content: content})
-  marker.addEventListener('click',infoWindow.open(map, marker));
+  marker.addEventListener('click',infoWindow.open(marker.map, marker));
+  return infoWindow;
 }
 
-export const addInfoWindowListenerAndOpen = (content, map, marker) =>{
+export const addInfoWindowListenerAndOpen = (content, marker) =>{
   var infoWindow = new window.google.maps.InfoWindow({content: content})
-  marker.addEventListener('click',infoWindow.open(map, marker));
-  infoWindow.open(map, marker);
+  marker.addEventListener('click',infoWindow.open(marker.map, marker));
+  infoWindow.open(marker.map, marker);
 }
+
+
 
 export const getGoogleMaps = () => {
     //Caso a promise ainda não esteja definida, ela é definida
@@ -47,7 +50,7 @@ export const getGoogleMaps = () => {
         // const key = 'AIzaSyAph94kHgFlxXgTW_62vr2XVc9j5rXUnL0'; => chave antiga, do projeto do curso de apis
         const key = 'AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik';
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&v=3&callback=resolveGoogleMapsPromise`
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${this.key}&v=3&callback=resolveGoogleMapsPromise`
         script.async = true;
         document.body.appendChild(script);
       });
