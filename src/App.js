@@ -20,6 +20,7 @@ class App extends Component {
   	infowindow: {},
     query: '',
     results: [],
+    //Colocar uma propriedade na location com o marcador
     locations: [],
     location: {},
     locationsIds: [
@@ -62,7 +63,9 @@ class App extends Component {
     //da função fetchLocationData (talvez ela tenha que retornar uma promise) e ao final criar um array de localizações e setar
     //o this.state.locations pra esse array!
     let locationsPromisesArray = idsArray.map(async (id) => {
+    	debugger;
     	fetch(this.getLocatioUrlById(id)).then(res => res.json()).then(data => {
+    		debugger;
 			let currentLocation = {};
 			currentLocation.name = data.response.venue.name;
 			currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
@@ -82,9 +85,9 @@ class App extends Component {
     	debugger;
     	console.log(`retorno é ${retorno}`);
     });
-    console.log(locationsPromisesArray);
+    console.log(`locationsPromisesArray é ${locationsPromisesArray}`);
     let locationsArray = await Promise.all
-    console.log(locationsArray);
+    console.log(`locationsArray é ${locationsArray}`);
     this.setState({locations: locationsArray});
   }
 
