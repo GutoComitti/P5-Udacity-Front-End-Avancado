@@ -27,9 +27,9 @@ class App extends Component {
       // `4bd07738046076b0a4fb6f71`,
       // `5213836811d26e8f30c46621`,
       // `5674e233498e82994552726f`,
-      `4c4b4fb2c9e4ef3b4a05fa10`,
-      `4be2b5e0f07b0f4757f6f543`,
-      `512bee80e4b08291289b70d0`,
+      // `4c4b4fb2c9e4ef3b4a05fa10`,
+      // `4be2b5e0f07b0f4757f6f543`,
+      // `512bee80e4b08291289b70d0`,
       `4b887040f964a520c5f731e3`,
       `51522631e4b086b6396c2473`
     ]
@@ -61,7 +61,7 @@ class App extends Component {
     //TODO: Puxar async os dados de todas as locations usando o fetchLocationData: ver como fazer pra conseguir fazer um encadeamento
     //da função fetchLocationData (talvez ela tenha que retornar uma promise) e ao final criar um array de localizações e setar
     //o this.state.locations pra esse array!
-    let locationsPromisesArray = idsArray.map((id) => {
+    let locationsPromisesArray = idsArray.map(async (id) => {
     	fetch(this.getLocatioUrlById(id)).then(res => res.json()).then(data => {
 			let currentLocation = {};
 			currentLocation.name = data.response.venue.name;
@@ -73,12 +73,17 @@ class App extends Component {
 			if (data.response.venue.hours && data.response.venue.hours.status){
 				currentLocation.desc += `Status: ${data.response.venue.hours.status}`;
 			}
+			console.log(`currentLocation logo antes do return no map é: `);
 			console.log(currentLocation);
 			return currentLocation;
 	    });
     });
+    Promise.all(locationsPromisesArray).then((retorno)=>{
+    	debugger;
+    	console.log(`retorno é ${retorno}`);
+    });
     console.log(locationsPromisesArray);
-    let locationsArray = await Promise.all(locationsPromisesArray);
+    let locationsArray = await Promise.all
     console.log(locationsArray);
     this.setState({locations: locationsArray});
   }
