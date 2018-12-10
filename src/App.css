@@ -26,6 +26,21 @@
   height: 100%;
 }
 
+.toolbar-search-icon{
+  background:none;
+  position:absolute;
+  top:0;
+  right:0;
+  line-height:45px;
+  padding:5px 15px 0px 15px;
+  color:#999;
+  border:0;
+  font-size:1.4em;
+  font-weight:bold;
+  cursor:pointer;
+  outline:none;
+}
+
 body, html{ height: 100%; margin: 0; padding: 0; }
 
 nav{
@@ -48,10 +63,11 @@ nav{
   margin: 0;
   color: #777;
   height: 10%;
+  font-size: 2em;
 }
 
 #filter-container{
-  width: 20%;
+  width: 300px;
   height: 100%;
   margin: 0;
   float: left;
@@ -60,6 +76,24 @@ nav{
 
 #map{
   height: 90%;
+}
+
+nav{
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+nav h1{
+  text-align: center;
+  color: white;
+  vertical-align: middle;
+  font-size: 2.5em;
+  margin: 0;
+}
+
+nav button{
+  position: absolute;
+  left: 0;
 }
 
 #results-list{

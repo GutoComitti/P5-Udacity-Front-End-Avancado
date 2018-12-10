@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-import * as MapsAPI from './MapsAPI';
 import Navbar from './views/Navbar';
 import Filter from './views/Filter';
 import Mapa from './views/Mapa';
@@ -8,6 +7,10 @@ import scriptLoader from 'react-async-script-loader'
 
 
 class App extends Component {
+  constructor(){
+    super();
+    this.updateLocations = this.updateLocations.bind(this);
+  }
   //query é o que está sendo digitado no campo do filtro
   //Results são o resultado da query do filtro
   //locationsIds é o array com os IDs dos lugares desejados da API do 4square
@@ -15,6 +18,7 @@ class App extends Component {
   //location é a localização que está selecionada, onde deve aparecer a infoWindow displayed
 
   state = {
+    filterExtended: false,
   	map: {},
   	bounds: {},
   	infowindow: {},
@@ -36,6 +40,83 @@ class App extends Component {
     ]
   }
 
+  addInfoWindow = (content, marker) =>{
+    var infoWindow = new window.google.maps.InfoWindow({content: content});
+    marker.addListener('click',() => {
+      this.openInfoWindow(infoWindow, marker);
+    });
+    return infoWindow;
+  }
+
+  closeInfoWindows = () =>{
+    this.state.locations.forEach((location) =>{
+      location.infoWindow.close();
+      location.marker.setAnimation(null);
+    });
+  }
+
+  showMarker = (marker) => {
+    marker.setMap(this.state.map);
+  }
+
+  hideMarkers = () => {
+    this.state.locations.forEach((location) =>{
+      location.marker.setMap(null);
+    });
+  }
+
+  showResultsMarkers = () => {
+    if (this.state.results.length > 0){
+      this.hideMarkers();
+      this.state.results.forEach((result) => {
+        this.showMarker(result.marker);
+      });
+    }else if (this.state.query !== ''){
+      this.hideMarkers();      
+    }
+  }
+
+  openInfoWindow = (infoWindow, marker) => {
+      this.closeInfoWindows();
+      infoWindow.open(marker.map, marker);
+      if (marker.getAnimation() !== null) {
+        marker.setAnimation(null)      
+      }else{
+        marker.setAnimation(window.google.maps.Animation.BOUNCE);
+      }
+  }
+
+  createMarker = (position, map) =>{
+    const marker = new window.google.maps.Marker({
+        position: position,
+        map: map
+    });
+    return marker;
+  }
+
+  //Para abrir a infowindow, rodar o código abaixo:
+  //infoWindow.open(marker.map, marker);
+
+  defineMapBounds = (marker, map) => {
+    var bounds = new window.google.maps.LatLngBounds();
+    marker.setMap(map);
+    bounds.extend(marker.position);
+    map.fitBounds(bounds);
+  }
+
+  toggleExtendFilter = () =>{
+    this.setState(prevState => ({
+      filterExtended: !prevState.filterExtended
+    }));
+  }
+
+  initMap = (element, config) => {
+    const map = new window.google.maps.Map(
+      document.getElementById(element), config
+    );
+    return map;
+  }
+
   updateQuery = (query) =>{
     this.setState({query: query.trim()});
     //Quando é alterada a busca, se havia uma localização selecionada, deixa de estar selecionada
@@ -44,127 +125,115 @@ class App extends Component {
     }
   }
 
-//Função pra definir apenas uma localização pra aparecer no mapa (quando é clicado no filtro)
-  showLocation = (location) =>{
-    if (location !== this.state.location){
-      this.setState({location: location});
-    }
-  }
-
-  getLocatioUrlById = (id) => {
+  getLocationUrlById = (id) => {
     const clientId = `IJV3PRHH2ZKQ5ZAEW3JUQ3TBV4EAQGL1KSPSFXF0M3NBMYMO`;
     const clientSecret = `DMGEOLITPUAB2BPQYONOY3NFNE1IKF1VBFJWNMIQQR2NXZUU`;
     const url = `https://api.foursquare.com/v2/venues/${id}?client_id=${clientId}&client_secret=${clientSecret}&v=20181118`;
     return url;
   }
 
-  async updateLocations (idsArray) {
+	updateLocations = idsArray => {
+  	let fetchResponse = [];
+    let fetches = [];
     //TODO: Puxar async os dados de todas as locations usando o fetchLocationData: ver como fazer pra conseguir fazer um encadeamento
     //da função fetchLocationData (talvez ela tenha que retornar uma promise) e ao final criar um array de localizações e setar
     //o this.state.locations pra esse array!
-    let locationsPromisesArray = idsArray.map(async (id) => {
-    	debugger;
-    	fetch(this.getLocatioUrlById(id)).then(res => res.json()).then(data => {
-    		debugger;
-			let currentLocation = {};
-			currentLocation.name = data.response.venue.name;
-			currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
-			currentLocation.desc = '';
-			if (data.response.venue.categories[0]){
-				currentLocation.desc += `Category: ${data.response.venue.categories[0].name}; `;
-			}
-			if (data.response.venue.hours && data.response.venue.hours.status){
-				currentLocation.desc += `Status: ${data.response.venue.hours.status}`;
-			}
-			console.log(`currentLocation logo antes do return no map é: `);
-			console.log(currentLocation);
-			return currentLocation;
-	    });
-    });
-    Promise.all(locationsPromisesArray).then((retorno)=>{
-    	debugger;
-    	console.log(`retorno é ${retorno}`);
-    });
-    console.log(`locationsPromisesArray é ${locationsPromisesArray}`);
-    let locationsArray = await Promise.all
-    console.log(`locationsArray é ${locationsArray}`);
-    this.setState({locations: locationsArray});
-  }
+    for (let id of idsArray) {
+    	fetches.push(
+    		fetch(this.getLocationUrlById(id))
+    		.then(res => res.json())
+    		.then(data => {
+    		if (data.meta.code === 200){
+    			fetchResponse.push(data);
+    		}else{
+    			console.log(`Promise ${id} returned with status ${data.meta.code}.`);
+    		}
+	    	}).catch(err => {
+	    		return console.log(err);
+	    	})
+    	)
+    };
+    Promise.all(fetches).then(() => {
+      const map = this.initMap('map', {center: {lat: -26.324, lng: -48.844}, zoom: 14});
+      var bounds = new window.google.maps.LatLngBounds();
+    	const locations = fetchResponse.map(data => {
+    		let currentLocation = {};
+				currentLocation.name = data.response.venue.name;
+        currentLocation.id = data.response.venue.id;
+				currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
+				currentLocation.desc = `<h1>${currentLocation.name}</h1></br>`;
+				if (data.response.venue.categories[0]){
+					currentLocation.desc += `Categoria: ${data.response.venue.categories[0].name}</br>`;
+				}
+				if (data.response.venue.hours && data.response.venue.hours.status){
+					currentLocation.desc += `Status: ${data.response.venue.hours.status}`;
+				}
+        if (data.response.venue.bestPhoto){
+          currentLocation.photoUrl = `${data.response.venue.bestPhoto.prefix}240x240${data.response.venue.bestPhoto.suffix}`;
+        }
+        currentLocation.marker = this.createMarker(currentLocation.coordinates, map);
+        currentLocation.infoWindow = this.addInfoWindow(currentLocation.desc, currentLocation.marker);
+        currentLocation.infoWindow.close();
+        bounds.extend(currentLocation.coordinates);
+        map.fitBounds(bounds);
+        return currentLocation;
+    	});
+    	this.setState({locations: locations, map: map});
+	  });
+	};
 
-  createMarker = (content, position, map) =>{
-    MapsAPI.addMarker(content, position, map);
-  }
-
-  updateResults = () => {
-    if(!this.state.locations.length === 0){
-      const queryResults = this.state.locations.filter((location) => (location.name.includes(this.state.query)));
-      if (!(JSON.stringify(queryResults)===JSON.stringify(this.state.results))){
+//Se há locations, compara o resultado anterior ao resultado atual, e se há diferença, seta this.state.results ao resultado atual
+	updateResults = () => {
+    if(this.state.locations.length > 0){
+      const queryResults = this.state.locations.filter((location) => (location.name.toLowerCase().includes(this.state.query.toLowerCase())));
+      if (!(JSON.stringify(queryResults.map((result)=>result.id))===JSON.stringify(this.state.results.map((result)=>result.id)))){
         this.setState({results: queryResults});
       }
     }
-  }
+	}
 
-  //O código abaixo pode ser reusado em partes pra criar os markers e listeners nos markers
-
-  // initMapAndItsComponents = () => {
-  //   MapsAPI.getGoogleMaps().then((google) => {
-  //     const map = MapsAPI.initMap(google, 'map', {center: {lat: 200.12, lng: 200.15}, zoom: 12});
-  //     if (this.state.results){
-  //       this.state.results.map((result) => {
-  //         const coordinates = {lat: result.lat, lng: result.lng};
-  //         const marker = MapsAPI.addMarker(result.desc, coordinates, map);
-  //           debugger;
-  //         if (this.state.location && result === this.state.location){
-  //           MapsAPI.addInfoWindowListenerAndOpen(result.desc,map,marker);
-  //         }else{
-  //           MapsAPI.addInfoWindowListener(result.desc,map,marker);
-  //         };
-  //       });
-  //     }
-  //   })
-  //   .catch((err)=>{
-  //     alert(`Ocorreu um erro ao carregar o mapa :(`);
-  //   });
-  // }
-
-  fetchLocationData = (id) => {
-
-  }
-
-  componentWillReceiveProps({ isScriptLoaded, isScriptLoadSucceed }){
-  	if (isScriptLoaded && !this.props.isScriptLoaded){
-  		if (isScriptLoadSucceed){
-  			const map = MapsAPI.initMap('map', {center: {lat: -26.324, lng: -48.844}, zoom: 14});
-  			// const bounds = 
-  			// const infowindow =
-  			// this.setState({bounds: bounds, infowindow: infowindow, map: map});
-  		}
-  	}
-  }
-
-  componentDidMount() {
+	componentDidMount() {
   	//Aqui deve ser feito o load dos dados async do 4square
   	//Ocorre apenas uma vez em todo o lifecycle, logo após o componente ser montado
-  	if (this.state.locations.length ===0){
+  	if (this.state.locations.length ===0)
   		this.updateLocations(this.state.locationsIds);
-  	}else{
-  		console.log("Algo está errado no componentDidMount");
-  		console.log("Só é pra chamar o componentDidMount uma vez e quando chama o this.state.locations deve estar vazio!");
-  	}
-  }
+	}
 
-  componentDidUpdate(){
-    this.updateResults();  	
-  }
+	componentDidUpdate(prevProps, prevState){
+  	this.updateResults();
+    //Se os resultados mudaram, atualizar o showResultsMarkers => evita ficar piscando a cada nova letra da query
+    if (prevState.results &&
+      !(JSON.stringify(this.state.results.map((location)=>location.id))
+        ===JSON.stringify(prevState.results.map((result)=>result.id)))
+      ){
+      this.showResultsMarkers();
+    }
+	}
 
   render() {
     return (
       <div className="container">
         
-        <Filter updateQuery={this.updateQuery} showLocation={this.showLocation} results={this.state.results} location={this.state.location}/>
-        <Navbar />
+        {this.state.filterExtended && (
+        <Filter 
+        updateQuery={this.updateQuery} 
+        openInfoWindow={this.openInfoWindow} 
+        results={this.state.results} 
+        location={this.state.location}
+        selectPlace={this.selectPlace}
+        />
+        )}
+
+        <Navbar 
+        toggleExtendFilter={this.toggleExtendFilter}
+        />
       
-        <Mapa results={this.state.results} location={this.state.location} locations={this.state.locations}/>
+        <Mapa 
+        results={this.state.results} 
+        location={this.state.location} 
+        locations={this.state.locations}
+        selectPlace={this.selectPlace}
+        />
       </div>
     );
   }

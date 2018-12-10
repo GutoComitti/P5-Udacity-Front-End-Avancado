@@ -1,11 +1,10 @@
 import React, { Component } from 'react'
-import * as MapsAPI from '../MapsAPI';
 
 class Mapa extends Component {
 
 	render() {
-	if (this.props.location){
-
+	if (this.props.location.name){
+		//Colocar a InfoWindow do location aqui
 	}
 
     	return (
