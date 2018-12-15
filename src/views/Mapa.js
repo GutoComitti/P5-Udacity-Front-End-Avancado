@@ -1,16 +1,9 @@
 import React, { Component } from 'react'
 
-class Mapa extends Component {
-
-	render() {
-	if (this.props.location.name){
-		//Colocar a InfoWindow do location aqui
-	}
-
-    	return (
-    		<div aria-label="mapa do bairro" id="map" />
-		)
-	}
+const Mapa = (props) => {
+	return (
+		<div aria-label="mapa do bairro" role="application" id="map" />
+	)
 }
 
 export default Mapa;

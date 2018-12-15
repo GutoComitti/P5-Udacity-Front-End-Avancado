@@ -47,6 +47,22 @@ nav{
   height: 10%;
   background-color: #222;
 }
+nav p {
+  float: right;
+  right: 0;
+  position: absolute;
+}
+
+#error-container{
+  background-color: #222;
+  text-align: center;
+  margin: 0;
+  color: white;
+}
+
+#error-container h3{
+  margin: 0;
+}
 
 #filter-input{
   width: 100%;

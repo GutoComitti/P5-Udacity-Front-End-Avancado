@@ -3,7 +3,8 @@ import './App.css';
 import Navbar from './views/Navbar';
 import Filter from './views/Filter';
 import Mapa from './views/Mapa';
-import scriptLoader from 'react-async-script-loader'
+import Error from './views/Error';
+import scriptLoader from 'react-async-script-loader';
 
 
 class App extends Component {
@@ -28,22 +29,27 @@ class App extends Component {
     locations: [],
     location: {},
     locationsIds: [
-      // `4b8d9f18f964a520c60433e3`,
-      // `4bd07738046076b0a4fb6f71`,
-      // `5213836811d26e8f30c46621`,
-      // `5674e233498e82994552726f`,
-      // `4c4b4fb2c9e4ef3b4a05fa10`,
-      // `4be2b5e0f07b0f4757f6f543`,
-      // `512bee80e4b08291289b70d0`,
-      `4b887040f964a520c5f731e3`,
-      `51522631e4b086b6396c2473`
-    ]
+{id: '4b887040f964a520c5f731e3', lat : -26.3111588547812, lng : -48.85477183220791},
+ {id: '5213836811d26e8f30c46621', lat : -26.302468037636825, lng : -48.84750114795226},
+ {id: '5674e233498e82994552726f', lat : -26.30282264676077, lng : -48.84957856695926},
+ {id: '4bd07738046076b0a4fb6f71', lat : -26.299135907550628, lng : -48.84890023335302},
+ {id: '512bee80e4b08291289b70d0', lat : -26.300541891199227, lng : -48.85342031120082},
+ {id: '51522631e4b086b6396c2473', lat : -26.30754334872784, lng : -48.84809454938463},
+ {id: '4be2b5e0f07b0f4757f6f543', lat : -26.305558681483124, lng : -48.84471036878928},
+ {id: '4b8d9f18f964a520c60433e3', lat : -26.303720061830536, lng : -48.84901323742851},
+ {id: '4c4b4fb2c9e4ef3b4a05fa10', lat : -26.3017340045689, lng : -48.848219625323836}
+    ],
+    error: null,
+    errorInfo: null
   }
 
   addInfoWindow = (content, marker) =>{
     var infoWindow = new window.google.maps.InfoWindow({content: content});
-    marker.addListener('click',() => {
+    marker.addListener('click', () => {
       this.openInfoWindow(infoWindow, marker);
+    });
+    infoWindow.addListener('closeclick', () => {
+      this.closeInfoWindows();
     });
     return infoWindow;
   }
@@ -143,24 +149,36 @@ class App extends Component {
     		fetch(this.getLocationUrlById(id))
     		.then(res => res.json())
     		.then(data => {
+          debugger;
     		if (data.meta.code === 200){
     			fetchResponse.push(data);
+          if (this.state.error){
+            this.setState({error: null});
+          }
     		}else{
-    			console.log(`Promise ${id} returned with status ${data.meta.code}.`);
+          console.log(`Ocorreu um erro.
+          code: ${data.meta.code} 
+          errorDetail: ${data.meta.errorDetail} 
+          errorType: ${data.meta.errorType}
+          requestId: ${data.meta.requestId}`);
+    			this.setState({error: "ao carregar dados do local"});
     		}
 	    	}).catch(err => {
-	    		return console.log(err);
+          this.setState({error: err});
 	    	})
     	)
     };
     Promise.all(fetches).then(() => {
+      debugger;
       const map = this.initMap('map', {center: {lat: -26.324, lng: -48.844}, zoom: 14});
-      var bounds = new window.google.maps.LatLngBounds();
+      const bounds = new window.google.maps.LatLngBounds();
     	const locations = fetchResponse.map(data => {
+        debugger;
     		let currentLocation = {};
 				currentLocation.name = data.response.venue.name;
         currentLocation.id = data.response.venue.id;
 				currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
+        console.log(`{id: '${currentLocation.id}', lat : ${currentLocation.coordinates.lat}, lng : ${currentLocation.coordinates.lng}},`);
 				currentLocation.desc = `<h1>${currentLocation.name}</h1></br>`;
 				if (data.response.venue.categories[0]){
 					currentLocation.desc += `Categoria: ${data.response.venue.categories[0].name}</br>`;
@@ -196,8 +214,16 @@ class App extends Component {
   	//Aqui deve ser feito o load dos dados async do 4square
   	//Ocorre apenas uma vez em todo o lifecycle, logo após o componente ser montado
   	if (this.state.locations.length ===0)
-  		this.updateLocations(this.state.locationsIds);
+  		this.updateLocations(this.state.locationsIds.map((location) => location.id));
 	}
+
+  componentDidCatch(error, errorInfo) {
+    // Catch errors in any child components and re-renders with an error message
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
+  }
 
 	componentDidUpdate(prevProps, prevState){
   	this.updateResults();
@@ -224,9 +250,18 @@ class App extends Component {
         />
         )}
 
-        <Navbar 
-        toggleExtendFilter={this.toggleExtendFilter}
-        />
+        {this.state.error && (
+          <Error
+          error={this.state.error}
+          />
+          )}
+
+        {!this.state.error && (
+          <Navbar 
+          toggleExtendFilter={this.toggleExtendFilter}
+          />
+        )} 
+
       
         <Mapa 
         results={this.state.results} 
