@@ -54,14 +54,14 @@ nav p {
 }
 
 #error-container{
-  background-color: #222;
-  text-align: center;
-  margin: 0;
-  color: white;
 }
 
 #error-container h3{
+  background-color: #222;
+  text-align: center;
+  color: white;
   margin: 0;
+  padding: 1em 0 1em;
 }
 
 #filter-input{

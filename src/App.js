@@ -3,18 +3,14 @@ import './App.css';
 import Navbar from './views/Navbar';
 import Filter from './views/Filter';
 import Mapa from './views/Mapa';
-import Error from './views/Error';
+import Error4sq from './views/Error4sq';
 import scriptLoader from 'react-async-script-loader';
 
 
 class App extends Component {
-  constructor(){
-    super();
-    this.updateLocations = this.updateLocations.bind(this);
-  }
   //query é o que está sendo digitado no campo do filtro
   //Results são o resultado da query do filtro
-  //locationsIds é o array com os IDs dos lugares desejados da API do 4square
+  //locationsInfos é o array com os IDs dos lugares desejados da API do 4square e lat/lng para fazer load quando ocorre erro da API
   //locations é o array com os dados puxados da API do 4square já tratado (apenas com o que interessa)
   //location é a localização que está selecionada, onde deve aparecer a infoWindow displayed
 
@@ -28,7 +24,7 @@ class App extends Component {
     //Colocar uma propriedade na location com o marcador
     locations: [],
     location: {},
-    locationsIds: [
+    locationsInfos: [
 {id: '4b887040f964a520c5f731e3', lat : -26.3111588547812, lng : -48.85477183220791},
  {id: '5213836811d26e8f30c46621', lat : -26.302468037636825, lng : -48.84750114795226},
  {id: '5674e233498e82994552726f', lat : -26.30282264676077, lng : -48.84957856695926},
@@ -149,18 +145,12 @@ class App extends Component {
     		fetch(this.getLocationUrlById(id))
     		.then(res => res.json())
     		.then(data => {
-          debugger;
     		if (data.meta.code === 200){
     			fetchResponse.push(data);
           if (this.state.error){
             this.setState({error: null});
           }
     		}else{
-          console.log(`Ocorreu um erro.
-          code: ${data.meta.code} 
-          errorDetail: ${data.meta.errorDetail} 
-          errorType: ${data.meta.errorType}
-          requestId: ${data.meta.requestId}`);
     			this.setState({error: "ao carregar dados do local"});
     		}
 	    	}).catch(err => {
@@ -169,35 +159,59 @@ class App extends Component {
     	)
     };
     Promise.all(fetches).then(() => {
-      debugger;
       const map = this.initMap('map', {center: {lat: -26.324, lng: -48.844}, zoom: 14});
       const bounds = new window.google.maps.LatLngBounds();
-    	const locations = fetchResponse.map(data => {
-        debugger;
-    		let currentLocation = {};
-				currentLocation.name = data.response.venue.name;
-        currentLocation.id = data.response.venue.id;
-				currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
-        console.log(`{id: '${currentLocation.id}', lat : ${currentLocation.coordinates.lat}, lng : ${currentLocation.coordinates.lng}},`);
-				currentLocation.desc = `<h1>${currentLocation.name}</h1></br>`;
-				if (data.response.venue.categories[0]){
-					currentLocation.desc += `Categoria: ${data.response.venue.categories[0].name}</br>`;
-				}
-				if (data.response.venue.hours && data.response.venue.hours.status){
-					currentLocation.desc += `Status: ${data.response.venue.hours.status}`;
-				}
-        if (data.response.venue.bestPhoto){
-          currentLocation.photoUrl = `${data.response.venue.bestPhoto.prefix}240x240${data.response.venue.bestPhoto.suffix}`;
-        }
-        currentLocation.marker = this.createMarker(currentLocation.coordinates, map);
-        currentLocation.infoWindow = this.addInfoWindow(currentLocation.desc, currentLocation.marker);
-        currentLocation.infoWindow.close();
-        bounds.extend(currentLocation.coordinates);
-        map.fitBounds(bounds);
-        return currentLocation;
-    	});
-    	this.setState({locations: locations, map: map});
-	  });
+      let locations = [];
+
+      //Quando não ocorre algum erro, preencher location conforme condicional abaixo;
+
+      if (fetches && fetchResponse.length > 0){
+        locations = fetchResponse.map(data => {
+          let currentLocation = {};
+          currentLocation.name = data.response.venue.name;
+          currentLocation.id = data.response.venue.id;
+          currentLocation.coordinates = {'lat': data.response.venue.location.lat, 'lng': data.response.venue.location.lng};
+          currentLocation.desc = `<h1>${currentLocation.name}</h1></br>`;
+          if (data.response.venue.bestPhoto){
+            currentLocation.photoUrl = `${data.response.venue.bestPhoto.prefix}240x240${data.response.venue.bestPhoto.suffix}`;
+            currentLocation.desc += `<img src="${currentLocation.photoUrl}"></br>`
+          }
+
+          if (data.response.venue.categories[0]){
+            currentLocation.desc += `Categoria: ${data.response.venue.categories[0].name}</br>`;
+          }
+          if (data.response.venue.hours && data.response.venue.hours.status){
+            currentLocation.desc += `Status: ${data.response.venue.hours.status}`;
+          }
+          currentLocation.marker = this.createMarker(currentLocation.coordinates, map);
+          currentLocation.infoWindow = this.addInfoWindow(currentLocation.desc, currentLocation.marker);
+          currentLocation.infoWindow.close();
+          bounds.extend(currentLocation.coordinates);
+          map.fitBounds(bounds);
+          return currentLocation;
+        });
+      }
+
+      //Quando ocorre algum erro, preencher locations com apenas as informações abaixo.
+
+      else
+      {
+        locations = this.state.locationsInfos.map(location => {
+          let currentLocation = {};
+          currentLocation.coordinates = {lat: location.lat, lng: location.lng};
+          currentLocation.desc = `<p>Ocorreu um erro ao carregar dados do local :(</p>`;
+          currentLocation.marker = this.createMarker(currentLocation.coordinates, map);
+          currentLocation.infoWindow = this.addInfoWindow(currentLocation.desc, currentLocation.marker);
+          currentLocation.infoWindow.close();
+          currentLocation.name = '';
+          bounds.extend(currentLocation.coordinates);
+          map.fitBounds(bounds);
+          return currentLocation;
+        })
+      }
+
+      this.setState({locations: locations, map: map});
+    });
 	};
 
 //Se há locations, compara o resultado anterior ao resultado atual, e se há diferença, seta this.state.results ao resultado atual
@@ -214,7 +228,7 @@ class App extends Component {
   	//Aqui deve ser feito o load dos dados async do 4square
   	//Ocorre apenas uma vez em todo o lifecycle, logo após o componente ser montado
   	if (this.state.locations.length ===0)
-  		this.updateLocations(this.state.locationsIds.map((location) => location.id));
+  		this.updateLocations(this.state.locationsInfos.map((location) => location.id));
 	}
 
   componentDidCatch(error, errorInfo) {
@@ -239,7 +253,6 @@ class App extends Component {
   render() {
     return (
       <div className="container">
-        
         {this.state.filterExtended && (
         <Filter 
         updateQuery={this.updateQuery} 
@@ -249,9 +262,12 @@ class App extends Component {
         selectPlace={this.selectPlace}
         />
         )}
-
+{
+        //Quando ocorre algum erro, deixar apenas uma faixa com informações de erro pois não há informações
+        //para filtrar quando ocorre erro, caso contrário, carregar normalmente a Navbar
+}
         {this.state.error && (
-          <Error
+          <Error4sq
           error={this.state.error}
           />
           )}
