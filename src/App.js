@@ -4,8 +4,7 @@ import Navbar from './views/Navbar';
 import Filter from './views/Filter';
 import Mapa from './views/Mapa';
 import Error4sq from './views/Error4sq';
-import scriptLoader from 'react-async-script-loader';
-
+import ErrorBoundary from './views/ErrorBoundary';
 
 class App extends Component {
   //query é o que está sendo digitado no campo do filtro
@@ -224,13 +223,6 @@ class App extends Component {
     }
 	}
 
-	componentDidMount() {
-  	//Aqui deve ser feito o load dos dados async do 4square
-  	//Ocorre apenas uma vez em todo o lifecycle, logo após o componente ser montado
-  	if (this.state.locations.length ===0)
-  		this.updateLocations(this.state.locationsInfos.map((location) => location.id));
-	}
-
   componentDidCatch(error, errorInfo) {
     // Catch errors in any child components and re-renders with an error message
     this.setState({
@@ -262,10 +254,10 @@ class App extends Component {
         selectPlace={this.selectPlace}
         />
         )}
-{
-        //Quando ocorre algum erro, deixar apenas uma faixa com informações de erro pois não há informações
-        //para filtrar quando ocorre erro, caso contrário, carregar normalmente a Navbar
-}
+        
+{/*Quando ocorre algum erro, deixar apenas uma faixa com informações de erro pois não há informações
+para filtrar quando ocorre erro, caso contrário, carregar normalmente a Navbar*/}
+
         {this.state.error && (
           <Error4sq
           error={this.state.error}
@@ -278,18 +270,19 @@ class App extends Component {
           />
         )} 
 
-      
-        <Mapa 
-        results={this.state.results} 
-        location={this.state.location} 
-        locations={this.state.locations}
-        selectPlace={this.selectPlace}
-        />
+          <ErrorBoundary>
+            <Mapa 
+            results={this.state.results} 
+            location={this.state.location} 
+            locations={this.state.locations}
+            selectPlace={this.selectPlace}
+            locationsInfos={this.state.locationsInfos}
+            updateLocations={this.updateLocations}
+            />
+          </ErrorBoundary>
       </div>
     );
   }
 }
 
-export default scriptLoader(
-  [`https://maps.googleapis.com/maps/api/js?key=AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik`]
-)(App);
+export default App
