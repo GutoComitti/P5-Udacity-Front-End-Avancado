@@ -34,8 +34,7 @@ class App extends Component {
  {id: '4b8d9f18f964a520c60433e3', lat : -26.303720061830536, lng : -48.84901323742851},
  {id: '4c4b4fb2c9e4ef3b4a05fa10', lat : -26.3017340045689, lng : -48.848219625323836}
     ],
-    error: null,
-    errorInfo: null
+    error: null
   }
 
   addInfoWindow = (content, marker) =>{
@@ -158,6 +157,9 @@ class App extends Component {
     	)
     };
     Promise.all(fetches).then(() => {
+      if (!window.google){
+        this.setState({error: 'ao carregar o mapa'});
+      }else{
       const map = this.initMap('map', {center: {lat: -26.324, lng: -48.844}, zoom: 14});
       const bounds = new window.google.maps.LatLngBounds();
       let locations = [];
@@ -210,7 +212,8 @@ class App extends Component {
       }
 
       this.setState({locations: locations, map: map});
-    });
+    }
+  });
 	};
 
 //Se há locations, compara o resultado anterior ao resultado atual, e se há diferença, seta this.state.results ao resultado atual
@@ -226,8 +229,7 @@ class App extends Component {
   componentDidCatch(error, errorInfo) {
     // Catch errors in any child components and re-renders with an error message
     this.setState({
-      error: error,
-      errorInfo: errorInfo
+      error: error
     });
   }
 
@@ -270,7 +272,8 @@ para filtrar quando ocorre erro, caso contrário, carregar normalmente a Navbar*
           />
         )} 
 
-          <ErrorBoundary>
+          <ErrorBoundary
+          error={this.state.error}>
             <Mapa 
             results={this.state.results} 
             location={this.state.location} 

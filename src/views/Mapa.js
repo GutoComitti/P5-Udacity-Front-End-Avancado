@@ -3,6 +3,8 @@ import scriptLoader from 'react-async-script-loader';
 
 class Mapa extends Component {
 
+
+
 		componentDidMount() {
   	//Aqui deve ser feito o load dos dados async do 4square
   	//Ocorre apenas uma vez em todo o lifecycle, logo após o componente ser montado
@@ -18,5 +20,5 @@ class Mapa extends Component {
 }
 
 export default scriptLoader(
-  [`https://maps.googleapis.com/maps/api/js?key=AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik`]
+  [`https://maps.googlepis.com/maps/api/js?key=AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik`]
 )(Mapa)
