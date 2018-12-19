@@ -20,5 +20,5 @@ class Mapa extends Component {
 }
 
 export default scriptLoader(
-  [`https://maps.googlepis.com/maps/api/js?key=AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik`]
+  [`https://maps.googeapis.com/maps/api/js?key=AIzaSyC4KgRuOBHyFpm9pb0Ym4vmvVVBByCJ8ik`]
 )(Mapa)

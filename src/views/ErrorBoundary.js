@@ -13,8 +13,8 @@ class ErrorBoundary extends React.Component {
     if (this.props.error === 'ao carregar o mapa') {
       // Error path
       return (
-        <div>
-          <h2>Ocorreu um erro ao carregar o mapa :(</h2>
+        <div id="map-load-error-container">
+          <h2 id="map-load-error">Ocorreu um erro ao carregar o mapa :(</h2>
         </div>
       );
     }

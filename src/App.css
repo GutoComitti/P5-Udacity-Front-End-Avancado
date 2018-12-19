@@ -93,6 +93,10 @@ nav p {
 #map{
   height: 90%;
 }
+#map-load-error{
+  justify-content: center;
+  display: flex;
+}
 
 nav{
   display: flex;
