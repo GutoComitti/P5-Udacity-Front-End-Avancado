@@ -11,7 +11,6 @@ class App extends Component {
   //Results são o resultado da query do filtro
   //locationsInfos é o array com os IDs dos lugares desejados da API do 4square e lat/lng para fazer load quando ocorre erro da API
   //locations é o array com os dados puxados da API do 4square já tratado (apenas com o que interessa)
-  //location é a localização que está selecionada, onde deve aparecer a infoWindow displayed
 
   state = {
     filterExtended: false,
@@ -20,9 +19,7 @@ class App extends Component {
   	infowindow: {},
     query: '',
     results: [],
-    //Colocar uma propriedade na location com o marcador
     locations: [],
-    location: {},
     locationsInfos: [
 {id: '4b887040f964a520c5f731e3', lat : -26.3111588547812, lng : -48.85477183220791},
  {id: '5213836811d26e8f30c46621', lat : -26.302468037636825, lng : -48.84750114795226},
@@ -119,10 +116,6 @@ class App extends Component {
 
   updateQuery = (query) =>{
     this.setState({query: query.trim()});
-    //Quando é alterada a busca, se havia uma localização selecionada, deixa de estar selecionada
-    if (this.state.location){
-      this.setState({location: {}});
-    }
   }
 
   getLocationUrlById = (id) => {
@@ -135,9 +128,6 @@ class App extends Component {
 	updateLocations = idsArray => {
   	let fetchResponse = [];
     let fetches = [];
-    //TODO: Puxar async os dados de todas as locations usando o fetchLocationData: ver como fazer pra conseguir fazer um encadeamento
-    //da função fetchLocationData (talvez ela tenha que retornar uma promise) e ao final criar um array de localizações e setar
-    //o this.state.locations pra esse array!
     for (let id of idsArray) {
     	fetches.push(
     		fetch(this.getLocationUrlById(id))
@@ -252,8 +242,6 @@ class App extends Component {
         updateQuery={this.updateQuery} 
         openInfoWindow={this.openInfoWindow} 
         results={this.state.results} 
-        location={this.state.location}
-        selectPlace={this.selectPlace}
         />
         )}
         
@@ -275,10 +263,7 @@ para filtrar quando ocorre erro, caso contrário, carregar normalmente a Navbar*
           <ErrorBoundary
           error={this.state.error}>
             <Mapa 
-            results={this.state.results} 
-            location={this.state.location} 
             locations={this.state.locations}
-            selectPlace={this.selectPlace}
             locationsInfos={this.state.locationsInfos}
             updateLocations={this.updateLocations}
             />
